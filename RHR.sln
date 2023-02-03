@@ -1,31 +1,209 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.4.33205.214
-MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RHR", "RHR.vcxproj", "{EB6C4117-DEE4-4F4D-81FB-77EA3D43B971}"
-EndProject
-Global
-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x64 = Debug|x64
-		Debug|x86 = Debug|x86
-		Release|x64 = Release|x64
-		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{EB6C4117-DEE4-4F4D-81FB-77EA3D43B971}.Debug|x64.ActiveCfg = Debug|x64
-		{EB6C4117-DEE4-4F4D-81FB-77EA3D43B971}.Debug|x64.Build.0 = Debug|x64
-		{EB6C4117-DEE4-4F4D-81FB-77EA3D43B971}.Debug|x86.ActiveCfg = Debug|Win32
-		{EB6C4117-DEE4-4F4D-81FB-77EA3D43B971}.Debug|x86.Build.0 = Debug|Win32
-		{EB6C4117-DEE4-4F4D-81FB-77EA3D43B971}.Release|x64.ActiveCfg = Release|x64
-		{EB6C4117-DEE4-4F4D-81FB-77EA3D43B971}.Release|x64.Build.0 = Release|x64
-		{EB6C4117-DEE4-4F4D-81FB-77EA3D43B971}.Release|x86.ActiveCfg = Release|Win32
-		{EB6C4117-DEE4-4F4D-81FB-77EA3D43B971}.Release|x86.Build.0 = Release|Win32
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {317FD4B9-726D-4561-B0FD-0A786AA53801}
-	EndGlobalSection
-EndGlobal
+// Інформація про столиці європейських держав
+// 15.01.2023
+// Львівська Політехніка
+// Студент групи ОІ-12
+// Мамрак Артем
+
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#define M 12
+#define N 50
+
+struct numdate
+{
+	int day, month;
+};
+typedef struct capital
+{
+	char name[20];
+	int population;
+	char holiday[30];
+	char date[25];
+	struct numdate ndate;
+} cap;
+cap arrcap[N];
+
+// Основні функції
+int GetInformation();	
+void SortByDate(int);
+void TwoMaxPop(int, int*, int*);
+void PrintTwoMaxPop(int, int);
+void PrintTable(int);
+// Вкладені функції
+int GetName(int);
+void GetPopulation(int);
+void GetHoliday(int);
+void GetNumDate(int);
+void GetDate(int);
+void Line();
+
+int main()
+{
+	int amount, i1, i2;
+	system("chcp 1251");
+	printf("Заповніть дані (Для завершення, введіть \"-\" у Назві столиці):");
+	amount = GetInformation(); // Функція повертає кількість введених даних
+	printf("\nТаблиця введених даних:");
+	PrintTable(amount);
+	SortByDate(amount);
+	printf("\nВідсортована у календарному порядку таблиця:");
+	PrintTable(amount);
+	TwoMaxPop(amount, &i1, &i2);
+	PrintTwoMaxPop(i1, i2);
+	getchar(); // Затримка для наочності результатів
+}
+
+int GetName(int a)
+{
+	int temp;
+	bool check;
+	do
+	{
+		printf("\n%2d. Назва столиці: ", a + 1);
+		temp = *gets_s(arrcap[a].name);
+		check = true;
+		if (a == 0 && temp == '-') // Перевірка лише першої структури
+		{
+			printf("\tПомилка - Введіть дані мінімум для однієї столиці.");
+			check = false;
+		}
+	} while (check == false);
+	return temp; // Перший символ введеного рядка
+}
+
+void GetPopulation(int a)
+{
+	char temp[15], *end;
+	do
+	{
+		printf("Населення: ");
+		gets_s(temp);
+		arrcap[a].population = strtol(temp, &end, 10); // Виділення десяткового числа із символьного рядка
+		if (*end != '\0') // end - Адреса першого неперетвореного символа
+			printf("\tПомилка - Введене не є числом.\n");
+	} while (*end != '\0');	
+}
+
+void GetHoliday(int a)
+{
+	printf("Назва державного свята: ");
+	gets_s(arrcap[a].holiday);
+}
+
+void GetNumDate(int a)
+{
+	char namemonths[M][10] = { "січня", "лютого", "березня", "квітня", "травня", "червня", "липня", "серпня", "вересня", "жовтня", "листопада", "грудня" };
+	const char* limits = " -_.1234567890";
+	char* end;
+	int x;
+	arrcap[a].ndate.day = strtol(arrcap[a].date, &end, 10); // Виділення десяткового числа із символьного рядка
+	end = strtok(arrcap[a].date, limits); // Знаходження лексеми (назва місяця)
+	for (x = 0; x < M; x++)
+	{
+		if (end == NULL) // Випадок, коли лексем взагалі не знайдено
+			break;
+		else if (strcmp(end, namemonths[x]) == 0) // Порівнянння лексеми із назвами місяців
+			arrcap[a].ndate.month = x + 1;
+	}
+}
+
+void GetDate(int a)
+{
+	bool check;
+	do
+	{
+		printf("Дата (Формат \"24 серпня\"): ");
+		gets_s(arrcap[a].date);
+		GetNumDate(a);
+		check = (arrcap[a].ndate.month != 0 && arrcap[a].ndate.day >= 1 && arrcap[a].ndate.day <= 31);
+		if (check == false)
+		{
+			printf("\tПомилка - День або Місяць введено неправильно.\n");
+			arrcap[a].ndate.month = 0; // Переприсвоєння для коректної роботи функції
+			arrcap[a].ndate.day = 0;
+		}
+	} while (check == false);
+}
+
+int GetInformation()
+{
+	int i, check;
+	for (i = 0; i < N; i++)
+	{
+		check = GetName(i);
+		if (check == '-') // Перевірка на завершення вводу
+			break;
+		GetPopulation(i);
+		GetHoliday(i);
+		GetDate(i);
+	}
+	return i; // Кількість введених даних
+}
+
+void SortByDate(int amount)
+{
+	cap temp, * p1, * p2; // Змінні та вказівники для роботи зі структурою
+	int i;
+	for (i = 0; i < amount; i++)
+	{
+		for (p1 = arrcap, p2 = arrcap + 1; p2 < arrcap + amount - i; p1++, p2++) // Порівнюються сусідні адреси
+		{
+			if (p1->ndate.month > p2->ndate.month || p1->ndate.month == p2->ndate.month && p1->ndate.day > p2->ndate.day) 
+			{
+				temp = *p1; // Умова виконання: Якщо місяць із p1 > місяця із p2
+				*p1 = *p2;  // Якщо місяці є однаковими, то перевіряються дні аналогічно до 1 випадку.
+				*p2 = temp;
+			}
+		}
+	}
+}
+
+void TwoMaxPop(int amount, int* a, int* b)
+{
+	int i, max1 = 0, max2 = 0;
+	*a = 0, * b = 0; // Вказівники, потрібні для запису знайдених індексів
+	for (i = 0; i < amount; i++)
+		if (arrcap[i].population > max1)
+		{
+			max2 = max1;
+			*b = *a;
+			max1 = arrcap[i].population;
+			*a = i;
+		}
+		else if (arrcap[i].population > max2)
+		{
+			max2 = arrcap[i].population;
+			*b = i;
+		}
+}
+
+void PrintTwoMaxPop(int a, int b)
+{
+	printf("\nНайбільше населення у столицях:\n%s - %d (Індекс у таблиці %d)\n", arrcap[a].name, arrcap[a].population, a + 1);
+	if (a != b) // Якщо введено дані лише про одну столицю
+		printf("%s - %d (Індекс у таблиці %d)\n", arrcap[b].name, arrcap[b].population, b + 1);
+	else
+		printf("Даних щодо другої столиці немає");
+}
+
+void Line()
+{
+	int i;
+	printf("\n\t");
+	for (i = 0; i < 84; i++)
+		printf("=");
+}
+
+void PrintTable(int amount)
+{
+	int i;
+	printf("\n\t%18s%44s%19s", " ", "\x95 Інформація про столиці європейських держав \x95", " "); // Заголовок
+	Line();
+	printf("\n\t%-3s%-20s%-15s%-30s%-15s", "№", "Назва столиці", "Населення", "Державне свято", "Дата"); // Назви стовпців
+	Line();
+	for (i = 0; i < amount; i++) // Дані
+		printf("\n\t%-3d%-20s%-15d%-30s%-15s", i + 1, arrcap[i].name, arrcap[i].population, arrcap[i].holiday, arrcap[i].date); 
+	printf("\n");
+}
